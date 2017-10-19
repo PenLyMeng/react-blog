@@ -4,26 +4,51 @@
 
 
 import React, {Component} from 'react'
-import {connect} from 'react-redux'
-import {Field, reduxForm} from 'redux-form'
 
+import {Field, reduxForm} from 'redux-form'
+import {Link} from 'react-router-dom'
+import {createPost} from '../actions'
+import {connect} from 'react-redux'
 
 class PostNew extends Component {
 
     renderField(field) {
+
+        const {meta} = field
+        const className = `form-group ${meta.touched && meta.error ? 'has-danger' : ''}`
+
+
+
         return (
-            <div className="form-group">
+            <div className={className}>
                 <label>{field.label}</label>
                 <input
                     type="text"
+                    className="form-control"
+                    {...field.input}
                 />
+               <div className="text-help">
+                   {meta.touched?meta.error:""}
+               </div>
             </div>
         )
     }
 
+    onSubmit(values){
+        this.props.createPost(values,()=>{
+            this.props.history.push('/')
+        })
+    }
+
     render() {
+
+        const {handleSubmit} = this.props
+        const styleButtons = {
+         margin:'5px'
+        }
+
         return (
-            <form>
+            <form onSubmit={handleSubmit(this.onSubmit.bind(this))}>
 
                 <Field
                     label="Title"
@@ -32,8 +57,8 @@ class PostNew extends Component {
                 />
 
                 <Field
-                    label="Tag"
-                    name="tags"
+                    label="Categories"
+                    name="categories"
                     component={this.renderField}
                 />
 
@@ -43,7 +68,8 @@ class PostNew extends Component {
                     component={this.renderField}
                 />
 
-
+                <button style={styleButtons} type="submit" className="btn btn-primary">Submit</button>
+                <Link  style={styleButtons} to="/" className="btn btn-danger">Cancel</Link>
             </form>
         )
     }
@@ -51,9 +77,23 @@ class PostNew extends Component {
 
 
 function validate(values) {
-    
+
+    const errors = {}
+
+    if (!values.title) {
+        errors.title = "Please enter some title"
+    }
+    if (!values.categories) {
+        errors.categories = "Please enter some tags"
+    }
+    if (!values.content) {
+        errors.content = "Please enter some content"
+    }
+    return errors
 }
 
 export default reduxForm({
-    form: 'PostsNewForm'
-})(PostNew)
+    form: 'PostsNewForm',
+  /*  field:['title','categories','content'],*/
+    validate
+})(connect(null,{createPost})(PostNew))
